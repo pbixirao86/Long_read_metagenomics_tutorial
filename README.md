@@ -53,14 +53,16 @@ We will use lightweight tools that process data read-by-read rather than trying 
 Step 1: Quality Control (NanoPlot)
 Instead of processing millions of reads, we'll generate a summary report to see if the sequencing was successful.
 
-Bash
+Command line:
+
 docker run --rm -v $(pwd):/data staphb/nanoplot:latest \
   NanoPlot --fastq /data/data/raw_reads.fastq.gz -o /data/results/qc_report
 
 Step 2: Ultra-Fast Subsampling (Filtlong)
 This is the "secret sauce" for low-power PCs. We will throw away the junk and keep only the best data, shrinking the file to a size the laptop can handle.
 
-Bash
+Command line:
+
 docker run --rm -v $(pwd):/data staphb/filtlong:latest sh -c\
   “filtlong --min_length 1000 --target_bases 100000000 /data/data/raw_reads.fastq.gz > ./data/cleaned_reads.fastq”
 # Note: This targets 100 Megabases, which is plenty for a training exercise.
@@ -68,7 +70,8 @@ docker run --rm -v $(pwd):/data staphb/filtlong:latest sh -c\
 Step 3: Fast Taxonomic Profiling (Kraken2)
 To save RAM, we use a "Standard-8" database (capped at 8GB) and tell Kraken2 to map it to the disk rather than loading it all into memory.
 
-Bash
+Command line:
+
 docker run --rm -v "${pwd}:/data" staphb/kraken2:latest sh -c "kraken2 --db /data/databases/standard_8gb --memory-mapping --threads 2 --report /data/results/taxonomy_report.txt /data/data/cleaned_reads.fastq > /data/results/kraken_output.txt"
 
 Instructor Note: You should provide the standard_8gb database on a USB stick or a shared local drive. Downloading a metagenomics database during a workshop will kill the Wi-Fi.
@@ -76,7 +79,8 @@ Instructor Note: You should provide the standard_8gb database on a USB stick or 
 Step 4: Visualizing Results (Krona)
 Finally, convert the text output into an interactive "zoomable" pie chart that opens in any web browser.
 
-Bash
+Command line:
+
 docker run --rm -v "${pwd}:/data" staphb/kraken2:latest sh -c "cut -f2,3 /data/results/kraken_output.txt > /data/results/krona_input.txt"
 docker run --rm -v "${pwd}:/data" staphb/krona:latest ktImportText /data/results/krona_input.txt -o /data/results/interactive_chart.html 
 
@@ -92,7 +96,8 @@ Phase 3: Assembly & Mapping (The Low-RAM Way)
 1. Fast Overlap Mapping (Minimap2)
 Before assembling, we need to find how the reads overlap. We use minimap2 with the -x ava-ont setting (All-vs-All for Oxford Nanopore).
 
-Bash
+Command line:
+
 docker run --rm -v $(pwd):/data staphb/minimap2:latest \
   minimap2 -x ava-ont -t 2 /data/data/cleaned_reads.fastq /data/data/cleaned_reads.fastq | gzip -1 > ./results/overlaps.paf.gz
 
@@ -101,7 +106,8 @@ docker run --rm -v $(pwd):/data staphb/minimap2:latest \
 •	While Raven does a bit of "polishing" (fixing errors), it is nowhere near as intensive as the multiple rounds of polishing MetaFlye performs. MetaFlye tries to achieve near-perfect accuracy for every species in a mix, which requires massive amounts of computation.
 •	Raven is optimized for single-organism (or low-complexity) assemblies. MetaFlye has to run much more complex math to figure out which reads belong to "Species A" vs. "Species B" when their DNA sequences might be 95% identical.
 
-Bash
+Command line:
+
 docker run --rm -v "${pwd}:/data" staphb/raven:latest sh -c "raven --threads 2 /data/data/cleaned_reads.fastq > /data/results/assembly.fasta" ________________________________________
 
 Phase 4: Mapping Reads back to Assembly
@@ -109,20 +115,23 @@ Mapping is useful to see "Coverage"—how many of your original reads actually s
 1. Generate the Alignment (BAM file)
 We map the original cleaned reads back to our new assembly.fasta.
 
-Bash
+Command line:
+
 docker run --rm -v "$(pwd):/data" staphb/minimap2:latest sh -c "minimap2 -ax map-ont /data/results/assembly.fasta /data/data/cleaned_reads.fastq > ./results/mapped_reads.sam"
 
 2. Process and Sort (Samtools)
 Computers can't read .sam files efficiently. We must convert them to binary (.bam) and sort them.
 
-Bash
+Command line:
+
 docker run --rm -v $(pwd):/data staphb/samtools:latest \
   samtools sort /data/results/mapped_reads.sam -o /data/results/mapped_sorted.bam
 
 3. Generate Statistics
 Now, ask the computer to tell you how well the mapping went:
 
-Bash
+Command line:
+
 docker run --rm -v "$(pwd):/data" staphb/samtools:latest sh -c "samtools flagstat /data/results/mapped_sorted.bam > /data/results/mapping_stats.txt"
 ________________________________________
 Summary of the Complete "Low-Power" Pipeline
