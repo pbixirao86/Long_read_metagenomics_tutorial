@@ -81,7 +81,7 @@ Finally, convert the text output into an interactive "zoomable" pie chart that o
 
 Command line:
 
-docker run --rm -v "${pwd}:/data" staphb/kraken2:latest sh -c "cut -f2,3 /data/results/kraken_output.txt > /data/results/krona_input.txt"
+docker run --rm -v "${pwd}:/data" staphb/kraken2:latest sh -c "cut -f3,2 /data/results/kraken_output.txt > /data/results/krona_input.txt"
 
 docker run --rm -v "${pwd}:/data" staphb/krona:latest ktImportText /data/results/krona_input.txt -o /data/results/interactive_chart.html 
 
