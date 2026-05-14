@@ -38,8 +38,11 @@ Bash
 
 # Create a folder structure to keep things tidy (in your username directory)
 mkdir nanopore_workshop #making parent folder for the work we are going to perform
+
 mkdir nanopore_workshop/data #make a directory within parent to store data
+
 mkdir nanopore_workshop/results #make a directory for the result files
+
 mkdir nanpore_workshop/databases #make directory for the kraken2 database
 
 cd ~/nanopore_workshop/data
