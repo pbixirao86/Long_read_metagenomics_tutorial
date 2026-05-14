@@ -18,8 +18,11 @@ Before students arrive, they should follow these steps to turn their computers i
 •	Copy the following text into it: 
 
 [wsl2]
+
 memory=4GB     # Limits VM memory to 4GB
+
 processors=2   # Limits VM to 2 logical processors
+
 swap=2GB       # Sets swap space
 
 •	Save the notepad as “.wslconfig” in your directory. Make sure you select “all files” under file type and keeping the inverted commas on the file name. 
