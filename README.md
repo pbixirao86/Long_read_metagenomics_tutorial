@@ -100,15 +100,8 @@ Troubleshooting for Learners
 
 Phase 3: Assembly & Mapping (The Low-RAM Way)
 
-1. Fast Overlap Mapping (Minimap2)
-Before assembling, we need to find how the reads overlap. We use minimap2 with the -x ava-ont setting (All-vs-All for Oxford Nanopore).
 
-Command line:
-
-docker run --rm -v $(pwd):/data staphb/minimap2:latest \
-  minimap2 -x ava-ont -t 2 /data/data/cleaned_reads.fastq /data/data/cleaned_reads.fastq | gzip -1 > ./results/overlaps.paf.gz
-
-2. Lightweight Assembly (Raven)
+1. Lightweight Assembly (Raven)
 •	Raven uses a very efficient "overlap" filter. It discards redundant data early in the process, meaning it doesn't have to keep as many millions of connections in the computer's RAM at once. 
 •	While Raven does a bit of "polishing" (fixing errors), it is nowhere near as intensive as the multiple rounds of polishing MetaFlye performs. MetaFlye tries to achieve near-perfect accuracy for every species in a mix, which requires massive amounts of computation.
 •	Raven is optimized for single-organism (or low-complexity) assemblies. MetaFlye has to run much more complex math to figure out which reads belong to "Species A" vs. "Species B" when their DNA sequences might be 95% identical.
@@ -118,6 +111,7 @@ Command line:
 docker run --rm -v "${pwd}:/data" staphb/raven:latest sh -c "raven --threads 2 /data/data/cleaned_reads.fastq > /data/results/assembly.fasta" ________________________________________
 
 Phase 4: Mapping Reads back to Assembly
+
 Mapping is useful to see "Coverage"—how many of your original reads actually support the assembly you just made.
 1. Generate the Alignment (BAM file)
 We map the original cleaned reads back to our new assembly.fasta.
